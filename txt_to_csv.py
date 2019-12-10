@@ -10,11 +10,20 @@ import os
 import csv
 import sys
 import argparse
+# emoji
+from emoji import UNICODE_EMOJI
+# regex
+import re
 
 # global variables
 parser = argparse.ArgumentParser()
 parser.add_argument("--txt", help="Input txt file path")
 parser.add_argument("--csv", help="Output csv file path")
+parser.add_argument(
+    "--filter",
+    default=False,
+    action="store_true",
+    help="Flag to filter non-English/Emoji characters")
 parser.add_argument(
     "--debug",
     default=False,
@@ -24,7 +33,11 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def convert_txt_to_csv(txt_path, csv_path, debug=False):
+def is_emoji(s):
+  return s in UNICODE_EMOJI
+
+
+def convert_txt_to_csv(txt_path, csv_path, filtering=False, debug=False):
   """
   Format of the txt file
     first row:         meta   (id)        (sentiment label)
@@ -71,6 +84,16 @@ def convert_txt_to_csv(txt_path, csv_path, debug=False):
           # remove the leading and trailing whitespace in the sentence
           sentence = sentence.strip()
           if debug: print("DEBUG: [{}] {} ({})".format(meta_id, sentence, label))
+          if filtering:
+            new = ""
+            for ch in sentence:
+              # https://www.utf8-chartable.de/unicode-utf8-table.pl?number=128
+              # https://unicode.org/emoji/charts/full-emoji-list.html
+              if ch.isascii() or is_emoji(ch):
+                new += ch
+            # remove duplicate spaces
+            sentence = re.sub(' +', ' ', new)
+            # 
           writer.writerow([meta_id, sentence, label])
         else:
           # Warning: we should not reach here
@@ -85,7 +108,7 @@ def main():
     sys.exit(2)
 
   # convert txt to csv
-  convert_txt_to_csv(args.txt, args.csv, args.debug)
+  convert_txt_to_csv(args.txt, args.csv, args.filter, args.debug)
   return 
 
 
