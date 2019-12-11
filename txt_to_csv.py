@@ -2,7 +2,7 @@
 Create a csv file from a text file
   using "Tab" as a delimiter
   CSV Format:
-    (Meta ID)\t(Sentence)\t(Sentiment Label)
+    (Meta ID)\t(Sentence)\t(Sentiment Label)\t(Language Tags)
     ...
     
 """
@@ -72,18 +72,21 @@ def convert_txt_to_csv(txt_path, csv_path, filtering=False, debug=False):
           meta_id = columns[1]
           label = columns[2]
           sentence = ""
+          lang_tags = ""
         elif len(columns) == 2:
-          # adding a word to a sentence
+          # adding a word to a sentence and a tag to language tags
           # this case: columns[0] is word and columns[1] is its tagging info
           word = columns[0]
-          if word[0].isalpha():
-            word = " {}".format(word)
+          tag = columns[1]
+          word = " {}".format(word)
           sentence += word
+          tag = " {}".format(tag)
+          lang_tags += tag
         elif len(columns) == 0:
           # time to write a row in csv
           # remove the leading and trailing whitespace in the sentence
           sentence = sentence.strip()
-          if debug: print("DEBUG: [{}] {} ({})".format(meta_id, sentence, label))
+          if debug: print("DEBUG: [{}] {} ({})".format(meta_id, sentence, label, lang_tags))
           if filtering:
             new = ""
             for ch in sentence:
@@ -94,7 +97,7 @@ def convert_txt_to_csv(txt_path, csv_path, filtering=False, debug=False):
             # remove duplicate spaces
             sentence = re.sub(' +', ' ', new)
             # 
-          writer.writerow([meta_id, sentence, label])
+          writer.writerow([meta_id, sentence, label, lang_tags])
         else:
           # Warning: we should not reach here
           if debug: print("WARNING: should not reach here, but why?")
